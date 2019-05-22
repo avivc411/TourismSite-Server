@@ -5,13 +5,9 @@ const usersRoutes = require('./api/routes/users');
 const pointsRoutes = require('./api/routes/points');
 const categoriesRoutes = require('./api/routes/categories');
 const DButilsAzure = require('./api/routes/DButils');
-const jwt=require('jsonwebtoken');
-const secret = "doubleOSeven";
 
 app.use(bodyParser.urlencoded({extended: false}));
 app.use(bodyParser.json());
-
-
 
 app.get('/getCountries', (req, res)=> {
    DButilsAzure.execQuery(
@@ -23,44 +19,6 @@ app.get('/getCountries', (req, res)=> {
           console.log(err);
           res.send(err);
        });
-});
-
-
-
-
-
-
-
-
-
-app.post('/login', (req, res)=>{
-   DButilsAzure.execQuery(
-       "SELECT * FROM users where username='"+req.body.username+"' and pass=")
-       .then(function(result){
-          res.send(result)
-       })
-       .catch(function(err){
-          console.log(err);
-          res.send(err);
-       });
-   const payload = {username: req.body.username, password: req.body.password};
-   const options = {expiresIn: "1d"};
-   const token=jwt.sign(payload, secret, options);
-   res.send(token);
-});
-
-app.use('/private', (req, res, next)=>{
-   const token = req.header("x-auth-token");
-   // no token
-   if (!token)
-      res.status(401).send("Access denied. No token provided.");
-   // verify token
-   try {
-      req.decoded = jwt.verify(token, secret);
-      next();
-   } catch (exception) {
-      res.status(400).send("Invalid token.");
-   }
 });
 
 app.use('/users', usersRoutes);
