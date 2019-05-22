@@ -33,8 +33,8 @@ router.get('/getAllPoints', (req, res)=>{
 });
 
 
-router.get('/getPoint/:pointname', (req, res)=>{
-    const pointName = req.params.pointname;
+router.get('/getPoint/:pointName', (req, res)=>{
+    const pointName = req.params.pointName;
     DButilsAzure.execQuery(
         "SELECT * FROM points where [name]='"+pointName+"';")
         .then(function(result){
@@ -47,6 +47,26 @@ router.get('/getPoint/:pointname', (req, res)=>{
             res.send(err);
         });
 });
+
+
+
+
+router.get('/getLastTwoReviews/:pointName', (req, res)=>{
+    const pointName = req.params.pointName;
+    DButilsAzure.execQuery(
+        "select top 2 * from reviews join points on reviews.[point]=points.[name] where reviews.[point]='"+pointName+"'order by [date] desc;")
+        .then(function(result){
+            res.status(200).json({
+                points:result
+            });
+        })
+        .catch(function(err){
+            console.log(err);
+            res.send(err);
+        });
+});
+
+
 
 
 
