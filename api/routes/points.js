@@ -48,6 +48,26 @@ router.get('/getPoint/:pointName', (req, res)=>{
         });
 });
 
+
+
+
+router.get('/getLastTwoReviews/:pointName', (req, res)=>{
+    const pointName = req.params.pointName;
+    DButilsAzure.execQuery(
+        "select top 2 * from reviews join points on reviews.[point]=points.[name] where reviews.[point]='"+pointName+"'order by [date] desc;")
+        .then(function(result){
+            res.status(200).json({
+                points:result
+            });
+        })
+        .catch(function(err){
+            console.log(err);
+            res.send(err);
+        });
+});
+
+
+
 router.post('/private/rankPoint', (req, res, next)=>{
     DButilsAzure.execQuery(
         "SELECT * FROM rankedPoints where [user]='"+req.body.username+"' and point='"+req.body.pointName+"'")
