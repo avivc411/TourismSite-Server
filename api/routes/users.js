@@ -6,10 +6,6 @@ router.get('/readUsers', (req, res, next)=>{
     DButilsAzure.execQuery(
         "SELECT * FROM users")
         .then(function(result){
-            res.status(200).json({
-                message: 'got from db',
-                result: result
-            });
             res.send(result)
         })
         .catch(function(err){
