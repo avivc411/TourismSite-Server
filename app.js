@@ -3,6 +3,7 @@ const app = express();
 const bodyParser = require('body-parser');
 const usersRoutes = require('./api/routes/users');
 const pointsRoutes = require('./api/routes/points');
+const categoriesRoutes = require('./api/routes/categories');
 const jwt=require('jsonwebtoken');
 const secret = "doubleOSeven";
 
@@ -30,11 +31,9 @@ app.use('/private', (req, res, next)=>{
    }
 });
 
-app.use('/products', productRoutes);
-app.use('/orders', orderRoutes);
 app.use('/users', usersRoutes);
 app.use('/points', pointsRoutes);
-
+app.use('/categories', categoriesRoutes);
 
 app.use((req, res, next)=>{
    const error = new Error('not found');
