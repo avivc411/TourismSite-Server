@@ -4,6 +4,7 @@ const bodyParser = require('body-parser');
 const usersRoutes = require('./api/routes/users');
 const pointsRoutes = require('./api/routes/points');
 const categoriesRoutes = require('./api/routes/categories');
+const DButilsAzure = require('./api/routes/DButils');
 const jwt=require('jsonwebtoken');
 const secret = "doubleOSeven";
 
@@ -11,6 +12,15 @@ app.use(bodyParser.urlencoded({extended: false}));
 app.use(bodyParser.json());
 
 app.post('/login', (req, res)=>{
+   DButilsAzure.execQuery(
+       "SELECT * FROM users where username='"+req.body.username+"' and pass=")
+       .then(function(result){
+          res.send(result)
+       })
+       .catch(function(err){
+          console.log(err);
+          res.send(err);
+       });
    const payload = {username: req.body.username, password: req.body.password};
    const options = {expiresIn: "1d"};
    const token=jwt.sign(payload, secret, options);
