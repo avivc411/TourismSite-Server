@@ -18,7 +18,8 @@ router.use('/private', (req, res, next)=>{
     }
 });
 
-router.get('/getAllPoints', (req, res)=>{
+router.get('/getAllPoin' +
+    'ts', (req, res)=>{
     DButilsAzure.execQuery(
         "SELECT * FROM points")
         .then(function(result){
@@ -96,5 +97,65 @@ router.post('/private/rankPoint', (req, res)=> {
         });
     res.send('ok');
 });
+
+
+
+
+
+
+
+
+
+
+
+
+router.post('/private/writeReviewOnPoint', (req, res, next)=>{
+    DButilsAzure.execQuery(
+        "SELECT * FROM reviews where [user]='"+req.decoded.username+"' and point='"+req.body.pointName+"'")
+        .then(function(result){
+            if(!result.length===0)
+                res.status(201).json({
+                    message: 'You have already reviewed this points'
+                });
+            else next();
+        })
+        .catch(function(err){
+            console.log(err);
+            res.send(err);
+        });
+});
+
+router.post('/private/writeReviewOnPoint', (req, res)=> {
+    console.log("insert into reviews values('"+req.decoded.username+"','"+req.body.pointName+"','"+req.body.review+"', GETDATE())");
+    DButilsAzure.execQuery(
+        "insert into reviews values('"+req.decoded.username+"','"+req.body.pointName+"','"+req.body.review+"', GETDATE())")
+        .then(function(){
+            res.status(200).send('ok review inserted');
+        })
+        .catch(function(err){
+            console.log(err);
+            res.send(err);
+        });
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 module.exports = router;
