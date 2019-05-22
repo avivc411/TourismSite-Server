@@ -10,7 +10,7 @@ router.post('/login', (req, res)=>{
         .then(function(result){
             if(result.length===0)
                 res.status(201).json({
-                    message: 'Username is not exist or password is wrong'
+                    message: 'Username is not exist or password is incorrect'
                 });
             else {
                 const payload = {username: req.body.username, password: req.body.password};

@@ -18,8 +18,7 @@ router.use('/private', (req, res, next)=>{
     }
 });
 
-router.get('/getAllPoin' +
-    'ts', (req, res)=>{
+router.get('/getAllPoints', (req, res)=>{
     DButilsAzure.execQuery(
         "SELECT * FROM points")
         .then(function(result){
@@ -32,7 +31,6 @@ router.get('/getAllPoin' +
             res.send(err);
         });
 });
-
 
 router.get('/getPoint/:pointName', (req, res)=>{
     const pointName = req.params.pointName;
@@ -48,9 +46,6 @@ router.get('/getPoint/:pointName', (req, res)=>{
             res.send(err);
         });
 });
-
-
-
 
 router.get('/getLastTwoReviews/:pointName', (req, res)=>{
     const pointName = req.params.pointName;
@@ -68,10 +63,11 @@ router.get('/getLastTwoReviews/:pointName', (req, res)=>{
 });
 
 
-
 router.post('/private/rankPoint', (req, res, next)=>{
     DButilsAzure.execQuery(
-        "SELECT * FROM rankedPoints where [user]='"+req.body.username+"' and point='"+req.body.pointName+"'")
+        "SELECT * " +
+        "FROM rankedPoints " +
+        "where [user]='"+req.decoded.username+"' and point='"+req.body.pointName+"'")
         .then(function(result){
             if(!result.length===0)
                 res.status(201).json({
@@ -85,29 +81,36 @@ router.post('/private/rankPoint', (req, res, next)=>{
         });
 });
 
-router.post('/private/rankPoint', (req, res)=> {
+router.post('/private/rankPoint', (req, res, next)=> {
     DButilsAzure.execQuery(
-        "insert into rankedPoints values('"+req.body.username+"','"+req.body.pointName+"',"+req.body.rank+")")
+        "insert into rankedPoints values('"+req.decoded.username+"','"+req.body.pointName+"',"+req.body.rank+")")
         .then(function(){
-            res.status(200);
+            next();
         })
         .catch(function(err){
             console.log(err);
             res.send(err);
         });
-    res.send('ok');
 });
 
-
-
-
-
-
-
-
-
-
-
+router.post('/private/rankPoint', (req, res)=> {
+    DButilsAzure.execQuery(
+        "update points " +
+        "set [rank]=av " +
+        "from " +
+        " (select avg(cast([rank] as decimal(10,2) ) ) /5*100 as av " +
+        " from rankedPoints " +
+        " where point='"+ req.body.pointName +"') as T " +
+        "where [name]='"+ req.body.pointName +"'"
+    )
+        .then(function(){
+            res.status(200).send('ok');
+        })
+        .catch(function(err){
+            console.log(err);
+            res.send(err);
+        });
+});
 
 router.post('/private/writeReviewOnPoint', (req, res, next)=>{
     DButilsAzure.execQuery(
@@ -117,7 +120,7 @@ router.post('/private/writeReviewOnPoint', (req, res, next)=>{
                 res.status(201).json({
                     message: 'You have already reviewed this points'
                 });
-            else next();
+            else next(result);
         })
         .catch(function(err){
             console.log(err);
@@ -125,8 +128,8 @@ router.post('/private/writeReviewOnPoint', (req, res, next)=>{
         });
 });
 
-router.post('/private/writeReviewOnPoint', (req, res)=> {
-    console.log("insert into reviews values('"+req.decoded.username+"','"+req.body.pointName+"','"+req.body.review+"', GETDATE())");
+router.post('/private/writeReviewOnPoint', (result, req, res)=> {
+    console.log(result);
     DButilsAzure.execQuery(
         "insert into reviews values('"+req.decoded.username+"','"+req.body.pointName+"','"+req.body.review+"', GETDATE())")
         .then(function(){
@@ -136,6 +139,61 @@ router.post('/private/writeReviewOnPoint', (req, res)=> {
             console.log(err);
             res.send(err);
         });
+});
+
+router.get('/private/getLastTwoPoints', (req, res)=>{
+    DButilsAzure.execQuery(
+        "select top 2 * "+
+        "from savedPoints join users "+
+        "on username=[user] "+
+        "where [user]='"+req.decoded.username+"' "+
+        "order by [savedDate] desc;")
+        .then(function(result){
+            res.status(200).send(result);
+        })
+        .catch(function(err){
+            console.log(err);
+            res.send(err);
+        });
+});
+
+router.get('/private/getFavoritesPoints', (req, res)=>{
+    DButilsAzure.execQuery(
+        "select [name],[desc],[rank],[numOfViewers],[category] "+
+        "from savedPoints join points "+
+        "on point=[name] "+
+        "where [user]='"+req.decoded.username+"'")
+        .then(function(result){
+            res.status(200).send(result);
+        })
+        .catch(function(err){
+            console.log(err);
+            res.send(err);
+        });
+});
+
+router.put('/private/addPointsToFavorites', (req, res)=>{
+   const points=req.body.points;
+   points.forEach((point)=>{
+       DButilsAzure.execQuery(
+           "IF EXISTS (SELECT * " +
+                            "FROM savedPoints " +
+                            "WHERE point='"+point.name+"') " +
+           "UPDATE savedPoints " +
+           "SET internalRank="+point.internalRank+" " +
+           "WHERE [point]='"+point.name+"' and [user]='"+
+                req.decoded.username+"' " +
+           "ELSE " +
+           "INSERT INTO savedPoints VALUES ('"+req.decoded.username+"','"+point.name+"','"+point.savedDate+"',"+point.internalRank+")"
+       )
+       .then(function(result){
+           res.status(200).send('done');
+       })
+       .catch(function(err){
+           console.log(err);
+           res.send(err);
+       });
+    })
 });
 
 

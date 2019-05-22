@@ -9,21 +9,21 @@ const DButilsAzure = require('./api/routes/DButils');
 app.use(bodyParser.urlencoded({extended: false}));
 app.use(bodyParser.json());
 
-app.get('/getCountries', (req, res)=> {
-   DButilsAzure.execQuery(
-       "SELECT * FROM countries")
-       .then(function (result) {
-          res.send(result)
-       })
-       .catch(function (err) {
-          console.log(err);
-          res.send(err);
-       });
-});
-
 app.use('/users', usersRoutes);
 app.use('/points', pointsRoutes);
 app.use('/categories', categoriesRoutes);
+
+app.get('/getCountries', (req, res)=> {
+    DButilsAzure.execQuery(
+        "SELECT * FROM countries")
+        .then(function (result) {
+            res.send(result)
+        })
+        .catch(function (err) {
+            console.log(err);
+            res.send(err);
+        });
+});
 
 app.use((req, res, next)=>{
    const error = new Error('not found');
