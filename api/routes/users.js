@@ -54,8 +54,16 @@ router.post('/register', (req, res, next)=>{
 router.post('/register', (req, res)=>{
     DButilsAzure.execQuery(
         "insert into questionsForUsers values('"+
-        req.body.username+"','"+req.body.question+"','"+
-        req.body.answer+"')");
+        req.body.username+"','"+req.body.question1+"','"+
+        req.body.answer1+"')");
+    next();
+});
+
+router.post('/register', (req, res)=>{
+    DButilsAzure.execQuery(
+        "insert into questionsForUsers values('"+
+        req.body.username+"','"+req.body.question2+"','"+
+        req.body.answer2+"')");
     res.status(200).json({message: 'register successfully'});
 });
 
