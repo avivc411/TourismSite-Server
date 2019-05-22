@@ -11,6 +11,28 @@ const secret = "doubleOSeven";
 app.use(bodyParser.urlencoded({extended: false}));
 app.use(bodyParser.json());
 
+
+
+app.get('/getCountries', (req, res)=> {
+   DButilsAzure.execQuery(
+       "SELECT * FROM countries")
+       .then(function (result) {
+          res.send(result)
+       })
+       .catch(function (err) {
+          console.log(err);
+          res.send(err);
+       });
+});
+
+
+
+
+
+
+
+
+
 app.post('/login', (req, res)=>{
    DButilsAzure.execQuery(
        "SELECT * FROM users where username='"+req.body.username+"' and pass=")
