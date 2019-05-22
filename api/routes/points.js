@@ -18,8 +18,7 @@ router.use('/private', (req, res, next)=>{
     }
 });
 
-router.get('/getAllPoin' +
-    'ts', (req, res)=>{
+router.get('/getAllPoits', (req, res)=>{
     DButilsAzure.execQuery(
         "SELECT * FROM points")
         .then(function(result){
