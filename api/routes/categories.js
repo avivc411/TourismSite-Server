@@ -20,4 +20,22 @@ router.get('/getCategories', (req, res, next)=>{
 });
 
 
+
+router.get('/getAllInCategory/:category', (req, res)=>{
+    const category = req.params.category;
+    DButilsAzure.execQuery(
+        "select * from categories join points on categories.[name]=points.[category] where categories.[name]='"+category+"';")
+        .then(function(result){
+            res.status(200).json({
+                category:result
+            });
+        })
+        .catch(function(err){
+            console.log(err);
+            res.send(err);
+        });
+});
+
+
+
 module.exports = router;
