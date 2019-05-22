@@ -1,6 +1,29 @@
 const express=require('express');
 const router=express.Router();
 const DButilsAzure = require('./DButils');
+const jwt=require('jsonwebtoken');
+const secret = "doubleOSeven";
+
+router.post('/login', (req, res)=>{
+    DButilsAzure.execQuery(
+        "select username from users where username='"+req.body.username+"' and pass='"+req.body.password+"'")
+        .then(function(result){
+            if(result.length===0)
+                res.status(201).json({
+                    message: 'Username is not exist or password is wrong'
+                });
+            else {
+                const payload = {username: req.body.username, password: req.body.password};
+                const options = {expiresIn: "1d"};
+                const token = jwt.sign(payload, secret, options);
+                res.send(token);
+            }
+        })
+        .catch(function(err){
+            console.log(err);
+            res.send(err);
+        });
+});
 
 router.get('/readUsers', (req, res, next)=>{
     DButilsAzure.execQuery(
