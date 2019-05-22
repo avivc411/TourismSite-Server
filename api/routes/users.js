@@ -41,6 +41,7 @@ router.post('/register', (req, res, next)=>{
 
 router.post('/register', (req, res, next)=>{
     const categories=req.body.categories;
+    console.log(req.body.categories.length);
     categories.forEach(function(category) {
         const categoryName = category.name;
         console.log("**************"+categoryName+"**************");
@@ -51,7 +52,7 @@ router.post('/register', (req, res, next)=>{
     next();
 });
 
-router.post('/register', (req, res)=>{
+router.post('/register', (req, res, next)=>{
     DButilsAzure.execQuery(
         "insert into questionsForUsers values('"+
         req.body.username+"','"+req.body.question1+"','"+
