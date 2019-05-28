@@ -6,7 +6,7 @@ const pointsRoutes = require('./api/routes/points');
 const categoriesRoutes = require('./api/routes/categories');
 const DButilsAzure = require('./api/routes/DButils');
 
-app.use(bodyParser.urlencoded({extended: false}));
+//app.use(bodyParser.urlencoded({extended: false}));
 app.use(bodyParser.json());
 
 app.use('/users', usersRoutes);
@@ -21,7 +21,7 @@ app.get('/getCountries', (req, res)=> {
         })
         .catch(function (err) {
             console.log(err);
-            res.send(err);
+            res.status(404).send("Cannot access to the countries");
         });
 });
 

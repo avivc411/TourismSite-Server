@@ -83,7 +83,7 @@ router.post('/private/rankPoint', (req, res, next)=>{
         })
         .catch(function(err){
             console.log(err);
-            res.send(err);
+            res.send("Error occurred while checking if the user ranked this point");
         });
 });
 
@@ -95,7 +95,7 @@ router.post('/private/rankPoint', (req, res, next)=> {
         })
         .catch(function(err){
             console.log(err);
-            res.send(err);
+            res.send("Error occurred while ranking the point");
         });
 });
 

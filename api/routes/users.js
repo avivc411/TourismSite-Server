@@ -45,7 +45,7 @@ router.post('/register', (req, res, next)=>{
             next();
         })
         .catch(function(err){
-            console.log(err)
+            //console.log(err)
             res.send(err)
         });
 });
@@ -82,16 +82,19 @@ router.post('/register', (req, res)=>{
 router.get('/getMyQuestions/:username', (req, res)=>{
     const username = req.params.username;
     DButilsAzure.execQuery(
-        "select content " +
+        "select id,content " +
         "from questions join questionsForUsers " +
         "on questions.id=questionsForUsers.question " +
         "where [user]='"+username+"';")
         .then(function(result){
-            res.status(200).json(result);
+            if(result.length!==2)
+                res.status(200).send("User does not exists");
+            else
+                res.status(200).json(result);
         })
         .catch(function(err){
             console.log(err);
-            res.send(err)
+            res.send("error while getting the answer");
         });
 });
 
@@ -102,13 +105,17 @@ router.post('/restorePassword', (req, res)=>{
         "select pass " +
         "from users join questionsForUsers " +
         "on [user]=username "+
-        "where [user]='"+username+"' and answer='"+answer+"';")
+        "where [user]='"+username+"' and question="+req.body.questionID+" and answer='"+answer+"';")
         .then(function(result){
-            res.status(200).json(result);
+            console.log(result.length);
+            if(result.length===0)
+                res.status(200).send("User does not exists or wrong answer");
+            else
+                res.status(200).json(result);
         })
         .catch(function(err){
             console.log(err);
-            res.send(err)
+            res.send("User does not exists or wrong answer");
         });
 });
 
