@@ -37,8 +37,14 @@ router.get('/getPoint/:pointName', (req, res)=>{
     DButilsAzure.execQuery(
         "SELECT * FROM points where [name]='"+pointName+"';")
         .then(function(result){
-            res.status(200).json({
-                points:result
+            DButilsAzure.execQuery(
+                "update points "+
+                        "set numOfViewers=numOfViewers+1 "+
+                        "where [name]='"+pointName+"';"
+            ).then(function(){
+                res.status(200).json({
+                    points: result
+                })
             });
         })
         .catch(function(err){
@@ -69,9 +75,9 @@ router.post('/private/rankPoint', (req, res, next)=>{
         "FROM rankedPoints " +
         "where [user]='"+req.decoded.username+"' and point='"+req.body.pointName+"'")
         .then(function(result){
-            if(!result.length===0)
+            if(!(result.length===0))
                 res.status(201).json({
-                    message: 'You have already rank this points'
+                    message: 'You have already ranked this points'
                 });
             else next();
         })
@@ -184,9 +190,9 @@ router.put('/private/addPointsToFavorites', (req, res)=>{
            "WHERE [point]='"+point.name+"' and [user]='"+
                 req.decoded.username+"' " +
            "ELSE " +
-           "INSERT INTO savedPoints VALUES ('"+req.decoded.username+"','"+point.name+"','"+point.savedDate+"',"+point.internalRank+")"
+           "INSERT INTO savedPoints VALUES ('"+req.decoded.username+"','"+point.name+"',GETDATE(),"+point.internalRank+")"
        )
-       .then(function(result){
+       .then(function(){
            res.status(200).send('done');
        })
        .catch(function(err){

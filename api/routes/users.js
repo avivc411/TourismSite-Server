@@ -25,18 +25,6 @@ router.post('/login', (req, res)=>{
         });
 });
 
-router.get('/readUsers', (req, res, next)=>{
-    DButilsAzure.execQuery(
-        "SELECT * FROM users")
-        .then(function(result){
-            res.send(result)
-        })
-        .catch(function(err){
-            console.log(err);
-            res.send(err);
-        });
-});
-
 router.post('/register', (req, res, next)=>{
     const user ={
         username: req.body.username,
