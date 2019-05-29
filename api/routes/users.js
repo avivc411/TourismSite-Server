@@ -207,6 +207,8 @@ router.post('/register', (req, res)=>{
 
 router.get('/getMyQuestions/:username', (req, res)=>{
     const username = req.params.username;
+
+
     DButilsAzure.execQuery(
         "select id,content " +
         "from questions join questionsForUsers " +

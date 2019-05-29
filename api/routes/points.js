@@ -176,8 +176,9 @@ router.post('/private/rankPoint', (req, res)=> {
 // checking if point exists
 router.post('/private/writeReviewOnPoint', (req, res, next)=>{
 
-    if (req.body.review===undefined)
-        res.send('review is empty');
+    if (req.body.review===undefined || req.body.pointName===undefined || req.body.review.length===0
+    || req.body.pointName.length===0)
+        res.send('review point error: Empty field');
     DButilsAzure.execQuery(
         "SELECT * FROM points where [name]='"+req.body.pointName+"'")
         .then(function(result){
