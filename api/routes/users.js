@@ -156,7 +156,7 @@ router.post('/register', (req, res, next)=> {
             indexDot=i;
         }
     }
-    
+
    if (counterEmail!=1 || counterDot===0|| user.email.length-indexDot===0){
        res.send('illegal email');
        return;
