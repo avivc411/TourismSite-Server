@@ -48,15 +48,13 @@ router.post('/register', (req, res, next)=> {
         email: req.body.email
     };
 
-
     // null checking
     if (user.username==null || user.password== null ||
         user.firstName==null || user.lastName== null||
-    user.city==null || user.country== null || user.email==null){
+        user.city==null || user.country== null || user.email==null){
         res.send("not all fields exists");
         return;
     }
-
 
     // user name checking
     if (user.username.length<3 || user.username>8){
@@ -130,9 +128,9 @@ router.post('/register', (req, res, next)=>{
         DButilsAzure.execQuery(
             "select * from categories where [name]='"+categoryName+"'")
             .then(function(result){
-              //  if(result.length===1)
-               res.send(result);
-        })
+                if(result.length===1)
+                    res.send(result);
+            })
             .catch(function(err){
                 console.log(err);
                 res.send(err);
@@ -145,27 +143,48 @@ router.post('/register', (req, res, next)=>{
     next();
 });
 
-
-
-
-
-
+router.post('/register', (req, res, next)=>{
+    const categories=req.body.categories;
+    if (categories===undefined || categories.length<2)
+        res.send("Bad request");
+    let validationCheck = true;
+    categories.forEach(function(category) {
+        if(category===undefined || category.name===undefined || category.name==="")
+            validationCheck=false;
+        categories.forEach(function(category2) {
+            if(category2.name!==undefined && category.name===category2.name && category!==category2)
+                validationCheck=false;
+        });
+    });
+    categories.forEach(function(category) {
+            DButilsAzure.execQuery(
+                "SELECT * " +
+                "FROM categories " +
+                "WHERE [name]='"+category.name+"'")
+                .then(function(result){
+                    if(result.length===0)
+                        validationCheck=false;
+                })
+                .catch(function(){
+                    validationCheck=false;
+                });
+        }
+    );
+    if(!validationCheck)
+        res.send("Bad request - Categories");
+    else next();
+});
 
 
 router.post('/register', (req, res, next)=>{
     const categories=req.body.categories;
-    if (categories==null || categories.length<2)
-        res.send("categories not enterd");
-
-    console.log(req.body.categories.length);
-
     categories.forEach(function(category) {
         const categoryName = category.name;
         DButilsAzure.execQuery(
             "insert into userCategories values('"+
             req.body.username+"','"+categoryName+"')");
-        });
-    //res.status(200).json({message: 'categories inserted'});
+    });
+//res.status(200).json({message: 'categories inserted'});
     next();
 });
 
@@ -252,9 +271,9 @@ router.get('/getMyQuestions/:username', (req, res)=>{
                 res.status(200).send("User does not exists");
             else
                 res.status(200).json({
-                message: 'questions:',
-                result: result
-            });
+                    message: 'questions:',
+                    result: result
+                });
         })
         .catch(function(err){
             console.log(err);
