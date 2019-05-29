@@ -18,12 +18,14 @@ router.use('/private', (req, res, next)=>{
     }
 });
 
+
+
 router.get('/getCategories', (req, res, next)=>{
     DButilsAzure.execQuery(
         "SELECT * FROM categories")
         .then(function(result){
             res.status(200).json({
-                message: 'got from db',
+                message: 'categories:',
                 result: result
             });
             res.send(result)
@@ -36,13 +38,29 @@ router.get('/getCategories', (req, res, next)=>{
 
 
 
+router.get('/getAllInCategory/:category', (req, res,next)=>{
+    DButilsAzure.execQuery(
+        "SELECT * FROM categories where [name]='"+req.params.category+"'")
+        .then(function(result){
+            if(result.length===0)
+                res.send("wrong category");
+            else
+                next();
+                })
+        .catch(function(err){
+            console.log(err);
+            res.send("Error occurred while retrieving the points");
+        });
+});
+
+
 router.get('/getAllInCategory/:category', (req, res)=>{
     const category = req.params.category;
     DButilsAzure.execQuery(
         "select * from categories join points on categories.[name]=points.[category] where categories.[name]='"+category+"';")
         .then(function(result){
             res.status(200).json({
-                category:result
+                points:result
             });
         })
         .catch(function(err){

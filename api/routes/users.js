@@ -216,11 +216,14 @@ router.get('/getMyQuestions/:username', (req, res)=>{
             if(result.length!==2)
                 res.status(200).send("User does not exists");
             else
-                res.status(200).json(result);
+                res.status(200).json({
+                    message: 'questions:',
+                    result: result
+                });
         })
         .catch(function(err){
             console.log(err);
-            res.send("error while getting the answer");
+            res.send("error while getting the questions");
         });
 });
 
