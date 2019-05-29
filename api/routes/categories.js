@@ -81,7 +81,9 @@ router.get('/private/getPopular', (req, res)=> {
                 if(result.length===0)
                     res.send("No categories for user or no points in the category");
                 else
-                    res.status(200).send(result);
+                    res.status(200).json({
+                        twoPopularPointsInUsersCategories:result
+                    });
         })
         .catch(function(err){
             console.log(err);
