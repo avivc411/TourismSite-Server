@@ -37,12 +37,13 @@ router.post('/login', (req, res)=>{
     }
 });
 
-
 // categories ****
 router.post('/register', (req, res, next)=>{
     const categories=req.body.categories;
-    if (categories===undefined || categories.length<2)
-        res.send("Bad request");
+    if (categories===undefined || categories.length<2) {
+        res.send("Bad request - categories undefined");
+        return;
+    }
     let validationCheck = true;
     categories.forEach(function(category) {
         if(category===undefined || category.name===undefined || category.name==="")
@@ -54,42 +55,33 @@ router.post('/register', (req, res, next)=>{
             });
         }
     });
-    if(!validationCheck)
-        res.send("Bad request - Categories");
-    categories.forEach(function(category) {
-            DButilsAzure.execQuery(
-                "SELECT * " +
-                "FROM categories " +
-                "WHERE [name]='"+category.name+"'")
-                .then(function(result){
-                    if(result.length===0)
-                        validationCheck=false;
-                })
-                .catch(function(){
-                    validationCheck=false;
-                });
-        }
-    );
-    if(!validationCheck)
-        res.send("Bad request - Categories");
-    else next();
+    if(validationCheck===false)
+        res.send("Bad request - categories values");
+    else
+        next();
 });
+
 
 //null checking for questions and answers
 router.post('/register', (req, res, next)=> {
-    if (req.body.question1===undefined || req.body.answer1=== undefined || req.body.question2===undefined || req.body.answer2===undefined)
+    if (req.body.question1===undefined || req.body.answer1===undefined
+        || req.body.question2===undefined || req.body.answer2===undefined
+        || req.body.question1==="" || req.body.answer1===""
+        || req.body.question2==="" || req.body.answer2==="")
         res.send(' error - check your questions and answers');
     else
         next();
 });
 
+
 //checking if user insert 2 different questions
 router.post('/register', (req, res, next)=> {
     if (req.body.question1===req.body.question2)
-        res.send(' error - you need to insert different questions');
+        res.send(' error - you need to insert two different questions');
     else
         next();
 });
+
 
 // checking question1
 router.post('/register', (req, res, next)=>{
@@ -97,15 +89,16 @@ router.post('/register', (req, res, next)=>{
         "select * from questions where [id]='"+req.body.question1+"'")
         .then(function(result){
             if(result.length!==1)
-                res.status(200).send("question1 does not exists");
+                res.send("question1 does not exists");
             else
                 next();
         })
         .catch(function(err){
             console.log(err);
-            res.send("error while getting the question");
+            res.send("Error occurred while retrieving the questions");
         });
 });
+
 
 // checking question2
 router.post('/register', (req, res, next)=>{
@@ -113,15 +106,16 @@ router.post('/register', (req, res, next)=>{
         "select * from questions where [id]='"+req.body.question2+"'")
         .then(function(result){
             if(result.length!==1)
-                res.status(200).send("question2 does not exists");
+                res.send("question2 does not exists");
             else
                 next();
         })
         .catch(function(err){
             console.log(err);
-            res.send("error while getting the question");
+            res.send("Error occurred while retrieving the questions");
         });
 });
+
 
 router.post('/register', (req, res, next)=> {
     const user = {
@@ -133,136 +127,203 @@ router.post('/register', (req, res, next)=> {
         country: req.body.country,
         email: req.body.email
     };
-    let fields=true;
+
     // null checking
-    if (user.username===undefined || user.password===undefined ||
-        user.firstName===undefined || user.lastName===undefined||
-        user.city===undefined || user.country===undefined || user.email===undefined ||
-        user.username.length<1 || user.password.length<1  ||
-        user.firstName.length<1  || user.lastName.length<1 ||
-        user.city.length<1  || user.country.length<1  || user.email.length<1 ){
-        res.send("not all fields exists");
-        fields=false;
+    if (user.username === undefined || user.password === undefined ||
+        user.firstName === undefined || user.lastName === undefined ||
+        user.city === undefined || user.country === undefined || user.email === undefined ||
+        user.username.length < 1 || user.password.length < 1 ||
+        user.firstName.length < 1 || user.lastName.length < 1 ||
+        user.city.length < 1 || user.country.length < 1 || user.email.length < 1) {
+        res.send("Not all fields exists");
         return;
     }
-    let legalUserName=true;
     // user name checking
-    if (user.username.length<3 || user.username>8){
-        res.send("user name length illegal");
-        legalUserName=false;
+    if (user.username.length < 3 || user.username > 8) {
+        res.send("Username's length illegal");
         return;
     }
-    if (legalUserName===true) {
-        for (let i = 0; i < user.username.length; i++) {
-            if (((user.username[i] >= 'a' && user.username[i] <= 'z') || (user.username[i] >= 'A' && user.username[i] <= 'Z')))
-                continue;
-            else {
-                res.send('illegal username');
-                legalUserName=false;
-                break;
-            }
+    for (let i = 0; i < user.username.length; i++) {
+        if (((user.username[i] >= 'a' && user.username[i] <= 'z') || (user.username[i] >= 'A' && user.username[i] <= 'Z')))
+            continue;
+        else {
+            res.send('illegal username');
+            return;
         }
     }
-    let legalPass=true;
+
     // password checking
     if (user.password.length < 4 || user.password.length > 10) {
         res.send("invalid password - password must be between 5 to 10 notes");
-        legalPass=false;
         return;
     }
-    if (legalPass===true) {
-        for (let i = 0; i < user.password.length; i++) {
-            if (((user.password[i] >= 'a' && user.password[i] <= 'z') || (user.password[i] >= 'A' && user.password[i] <= 'Z'))
-                || user.password[i] === '0' || user.password[i] === '1' || user.password[i] === '2' || user.password[i] === '3'
-                || user.password[i] === '4' || user.password[i] === '5' || user.password[i] === '6'
-                || user.password[i] === '7' || user.password[i] === '8' || user.password[i] === '9')
-                continue;
-            else {
-                res.send('illegal password');
-                legalPass=false;
-                break;
-            }
+    for (let i = 0; i < user.password.length; i++)
+        if (((user.password[i] >= 'a' && user.password[i] <= 'z') || (user.password[i] >= 'A' && user.password[i] <= 'Z'))
+            || user.password[i] === '0' || user.password[i] === '1' || user.password[i] === '2' || user.password[i] === '3'
+            || user.password[i] === '4' || user.password[i] === '5' || user.password[i] === '6'
+            || user.password[i] === '7' || user.password[i] === '8' || user.password[i] === '9')
+            continue;
+        else {
+            res.send('illegal password');
+            return;
         }
-    }
-    let legalCountry=true;
-    // country checking
+    next();
+});
+
+
+// country checking
+router.post('/register', (req, res, next)=> {
+    const user = {
+        username: req.body.username,
+        password: req.body.password,
+        firstName: req.body.firstName,
+        lastName: req.body.lastName,
+        city: req.body.city,
+        country: req.body.country,
+        email: req.body.email
+    };
     DButilsAzure.execQuery(
         "select * " +
         "from countries " +
         "where [countryName]='" + user.country + "';")
         .then(function (result) {
-            console.log("country check");
-            console.log(result.length);
-            if (result.length === 0) {
-                res.status(200).send("Country doesnt exists");
-                legalCountry=false;
-            }
-        });
-    let legalNewUser=true;
-    // user already exists checking
-    DButilsAzure.execQuery(
-        "select * from users where [username]='"+user.username+"'")
-        .then(function (result) {
-            console.log("user check");
-            console.log(result.length);
-            if (result.length !==0) {
-                res.status(200).send("user Already exists");
-                legalNewUser=false;
-            }
+            if (result.length === 0)
+                res.send("Country doesnt exists");
+            else next();
         })
         .catch(function (err) {
             console.log(err);
-            res.send(err);
+            res.send("Error occurred while retrieving the countries");
         });
-
-    if (legalCountry===true && legalNewUser===true && legalPass===true && legalUserName===true
-        && fields===true) {
-        DButilsAzure.execQuery(
-            "insert into users values('" +
-            user.username + "','" + user.password + "','" +
-            user.firstName + "','" + user.lastName + "','" +
-            user.city + "','" + user.country + "','" +
-            user.email + "')")
-            .then(function () {
-            })
-            .catch(function (err) {
-                console.log(err)
-                res.send(err);
-            });
-    }
-    if (legalCountry===true && legalNewUser===true && legalPass===true && legalUserName===true
-        && fields===true) {
-        next();
-    }
 });
 
-router.post('/register', (req, res, next)=>{
-    const categories=req.body.categories;
-    categories.forEach(function(category) {
-        const categoryName = category.name;
-        DButilsAzure.execQuery(
-            "insert into userCategories values('"+
-            req.body.username+"','"+categoryName+"')");
-    });
-    next();
+
+router.post('/register', (req, res, next)=> {
+    const user = {
+        username: req.body.username,
+        password: req.body.password,
+        firstName: req.body.firstName,
+        lastName: req.body.lastName,
+        city: req.body.city,
+        country: req.body.country,
+        email: req.body.email
+    };
+    // user already exists checking
+    DButilsAzure.execQuery(
+        "select * from users where [username]='" + user.username + "'")
+        .then(function (result) {
+            if (result.length !== 0)
+                res.status(200).send("user Already exists");
+            else next();
+        })
+        .catch(function (err) {
+            console.log(err);
+            res.send("Error occurred while validate the username");
+        });
+});
+
+
+router.post('/register', (req, res, next)=> {
+    const user = {
+        username: req.body.username,
+        password: req.body.password,
+        firstName: req.body.firstName,
+        lastName: req.body.lastName,
+        city: req.body.city,
+        country: req.body.country,
+        email: req.body.email
+    };
+    DButilsAzure.execQuery(
+        "insert into users values('" +
+        user.username + "','" + user.password + "','" +
+        user.firstName + "','" + user.lastName + "','" +
+        user.city + "','" + user.country + "','" +
+        user.email + "')")
+        .then(()=>{next();})
+        .catch(function (err) {
+            console.log(err);
+            res.send("Error occurred while insert the user");
+        });
 });
 
 router.post('/register', (req, res, next)=>{
     DButilsAzure.execQuery(
         "insert into questionsForUsers values('"+
         req.body.username+"','"+req.body.question1+"','"+
-        req.body.answer1+"')");
-    next();
+        req.body.answer1+"')")
+        .then(()=>{next();})
+        .catch(function (err){
+            console.log(err);
+            deleteUser(req.body.username, res, "Error occurred while insert the first answer");
+        });
 });
 
-router.post('/register', (req, res)=>{
+router.post('/register', (req, res, next)=>{
     DButilsAzure.execQuery(
         "insert into questionsForUsers values('"+
         req.body.username+"','"+req.body.question2+"','"+
-        req.body.answer2+"')");
-    res.status(200).json({message: 'register successfully'});
+        req.body.answer2+"')")
+        .then(()=>{next();})
+        .catch(function (err){
+            console.log(err);
+            deleteUser(req.body.username, res, "Error occurred while insert the second answer");
+        });
 });
 
+router.post('/register', (req, res)=> {
+    let validateCategory=true;
+    const categories=req.body.categories;
+    let i=0;
+    categories.forEach(function (category) {
+            if(!validateCategory)
+                return;
+            DButilsAzure.execQuery(
+                "SELECT * " +
+                "FROM categories " +
+                "WHERE [name]='" + category.name + "'")
+                .then(function (result) {
+                    if (result.length === 0) {
+                        validateCategory = false;
+                        deleteUser(req.body.username, res, "Bad request - a category does not exists");
+                    }
+                    else {
+                        DButilsAzure.execQuery(
+                            "insert into userCategories values('" +
+                            req.body.username + "','" + category.name + "')")
+                            .then(()=>{
+                                i++;
+                                if(i===categories.length)
+                                    res.status(200).send("Done");
+                            })
+                            .catch(function (err) {
+                                console.log(err);
+                                deleteUser(req.body.username, res, "Error occurred while insert categories for user");
+                                validateCategory = false;
+                            });
+                    }
+                })
+                .catch(function (err) {
+                    console.log(err);
+                    deleteUser(req.body.username, res, "Error occurred while validate the categories");
+                });
+        }
+    );
+});
+
+
+function deleteUser(username, res, message){
+    DButilsAzure.execQuery(
+        "DELETE FROM users " +
+        "WHERE username='" + username + "'"
+    )
+        .then(() => {
+            res.send("Bad request - a category does not exists");
+        })
+        .catch(function (err){
+            console.log(err);
+            res.send(message);
+        });
+}
 
 router.get('/getMyQuestions/:username', (req, res)=>{
     const username = req.params.username;
