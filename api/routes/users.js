@@ -49,9 +49,12 @@ router.post('/register', (req, res, next)=> {
     };
 
     // null checking
-    if (user.username==null || user.password== null ||
-        user.firstName==null || user.lastName== null||
-        user.city==null || user.country== null || user.email==null){
+    if (user.username==undefined || user.password== undefined ||
+        user.firstName==undefined || user.lastName== undefined||
+        user.city==undefined || user.country== undefined || user.email==undefined ||
+        user.username.length<1 || user.password.length<1  ||
+        user.firstName.length<1  || user.lastName.length<1 ||
+        user.city.length<1  || user.country.length<1  || user.email.length<1 ){
         res.send("not all fields exists");
         return;
     }
@@ -61,11 +64,27 @@ router.post('/register', (req, res, next)=> {
         res.send("user name length illegal");
         return;
     }
-
+    for (var i=0;i<user.username.length;i++){
+        if (((user.username[i]>='a' && user.username[i]<='z')|| (user.username[i]>='A' && user.username[i]<='Z')))
+            continue;
+        else {
+            res.send('illegal username');
+            break;
+        }
+    }
     // password checking
     if (user.password.length < 4 || user.password.length > 10) {
         res.send("invalid password - password must be between 5 to 10 notes");
         return;
+    }
+    for (var i=0;i<user.username.length;i++){
+        if (((user.password[i]>='a' && user.password[i]<='z')|| (user.password[i]>='A' && user.password[i]<='Z') ||
+            (user.password[i]>='0' && user.password[i]<='9')))
+            continue;
+        else {
+            res.send('illegal password');
+            break;
+        }
     }
     // country checking
     DButilsAzure.execQuery(
@@ -80,7 +99,6 @@ router.post('/register', (req, res, next)=> {
                 return;
             }
         });
-
 
     // user already exists checking
     DButilsAzure.execQuery(
@@ -117,32 +135,6 @@ router.post('/register', (req, res, next)=> {
 });
 
 // categories ****
-
-router.post('/register', (req, res, next)=>{
-    const categories=req.body.categories;
-    if (categories==null || categories.length<2)
-        res.send("categories not enterd");
-    var counter=0;
-    categories.forEach(function(category) {
-        const categoryName = category.name;
-        DButilsAzure.execQuery(
-            "select * from categories where [name]='"+categoryName+"'")
-            .then(function(result){
-                if(result.length===1)
-                    res.send(result);
-            })
-            .catch(function(err){
-                console.log(err);
-                res.send(err);
-            });
-    });
-    res.send('counter is:'+counter);
-    if (counter===categories.length)
-        res.send('ok all categories good')
-    //res.status(200).json({message: 'categories inserted'});
-    next();
-});
-
 router.post('/register', (req, res, next)=>{
     const categories=req.body.categories;
     if (categories===undefined || categories.length<2)
@@ -257,6 +249,9 @@ router.post('/register', (req, res)=>{
         req.body.answer2+"')");
     res.status(200).json({message: 'register successfully'});
 });
+
+
+
 
 
 
