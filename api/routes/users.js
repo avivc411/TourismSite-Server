@@ -151,11 +151,15 @@ router.post('/register', (req, res, next)=>{
     categories.forEach(function(category) {
         if(category===undefined || category.name===undefined || category.name==="")
             validationCheck=false;
-        categories.forEach(function(category2) {
-            if(category2.name!==undefined && category.name===category2.name && category!==category2)
-                validationCheck=false;
-        });
+        else {
+            categories.forEach(function (category2) {
+                if (category2.name !== undefined && category.name === category2.name && category !== category2)
+                    validationCheck = false;
+            });
+        }
     });
+    if(!validationCheck)
+        res.send("Bad request - Categories");
     categories.forEach(function(category) {
             DButilsAzure.execQuery(
                 "SELECT * " +
