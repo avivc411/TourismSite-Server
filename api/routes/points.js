@@ -22,61 +22,114 @@ router.get('/getAllPoints', (req, res)=>{
     DButilsAzure.execQuery(
         "SELECT * FROM points")
         .then(function(result){
-            res.status(200).json({
-                points:result
-            });
+            if(result.length===0)
+                res.send("No points in the system");
+            else
+                res.status(200).json({
+                    points:result
+                });
         })
         .catch(function(err){
             console.log(err);
-            res.send(err);
+            res.send("Error occurred while retrieving the points");
         });
 });
 
-router.get('/getPoint/:pointName', (req, res)=>{
+router.get('/getPoint/:pointName', (req, res, next)=>{
     const pointName = req.params.pointName;
+    if(pointName===undefined || pointName===""){
+        res.send("Bad request");
+        return;
+    }
     DButilsAzure.execQuery(
-        "SELECT * FROM points where [name]='"+pointName+"';")
-        .then(function(result){
-            DButilsAzure.execQuery(
-                "update points "+
-                        "set numOfViewers=numOfViewers+1 "+
-                        "where [name]='"+pointName+"';"
-            ).then(function(){
-                res.status(200).json({
-                    points: result
-                })
-            });
+        "SELECT [name] FROM points where [name]='"+pointName+"';")
+        .then(function(){
+            if(result.length===0)
+                res.send("There is no such point");
+            else next()
         })
         .catch(function(err){
             console.log(err);
-            res.send(err);
+            res.send("Error occurred while finding this point");
+        });
+});
+
+router.get('/getPoint/:pointName', (req, res)=> {
+    const pointName = req.params.pointName;
+    DButilsAzure.execQuery(
+        "update points "+
+        "set numOfViewers=numOfViewers+1 "+
+        "where [name]='"+pointName+"';")
+        .then(function(result){
+            res.status(200).json({
+                points: result
+            })
+        })
+        .catch(function(err){
+            console.log(err);
+            res.send("Error occurred while updating this point viewers");
         });
 });
 
 router.get('/getLastTwoReviews/:pointName', (req, res)=>{
     const pointName = req.params.pointName;
+    if(pointName===undefined || pointName===""){
+        res.send("Bad request");
+        return;
+    }
     DButilsAzure.execQuery(
         "select top 2 * from reviews join points on reviews.[point]=points.[name] where reviews.[point]='"+pointName+"'order by [date] desc;")
         .then(function(result){
-            res.status(200).json({
-                points:result
-            });
+            if(result.length===0)
+                res.send("There is no such point or there are no reviews for that point");
+            else
+                res.status(200).json({
+                    points:result
+                });
         })
         .catch(function(err){
             console.log(err);
-            res.send(err);
+            res.send("Error occurred while retrieving this point's reviews");
         });
 });
 
 
 router.post('/private/rankPoint', (req, res, next)=>{
+    const pointName = req.body.pointName;
+    if(req.body.rank===undefined || pointName===undefined || pointName==="") {
+        res.send("Bad request");
+        return;
+    }
+    const rank=parseFloat(req.body.rank);
+    if(rank>5 || rank<1|| !Number.isInteger(rank)) {
+        res.send("Rank should be an integer between 1 to 5");
+        return;
+    }
+    DButilsAzure.execQuery(
+        "SELECT * " +
+        "FROM points " +
+        "WHERE [name]='"+pointName+"'")
+        .then(function(result){
+            if(result.length===0){
+                res.send("This point does not exist");
+            }
+            else next();
+        })
+        .catch(function(err){
+            console.log(err);
+            res.send("Error occurred while checking this point");
+        });
+});
+
+router.post('/private/rankPoint', (req, res, next)=> {
+    const pointName = req.body.pointName;
     DButilsAzure.execQuery(
         "SELECT * " +
         "FROM rankedPoints " +
-        "where [user]='"+req.decoded.username+"' and point='"+req.body.pointName+"'")
+        "where [user]='"+req.decoded.username+"' and point='"+pointName+"'")
         .then(function(result){
             if(!(result.length===0))
-                res.status(201).json({
+                res.json({
                     message: 'You have already ranked this points'
                 });
             else next();
@@ -110,11 +163,11 @@ router.post('/private/rankPoint', (req, res)=> {
         "where [name]='"+ req.body.pointName +"'"
     )
         .then(function(){
-            res.status(200).send('ok');
+            res.status(200).send("Done");
         })
         .catch(function(err){
             console.log(err);
-            res.send(err);
+            res.send("Error occurred while calculation the point rank");
         });
 });
 
@@ -179,26 +232,40 @@ router.get('/private/getFavoritesPoints', (req, res)=>{
 });
 
 router.put('/private/addPointsToFavorites', (req, res)=>{
-   const points=req.body.points;
-   points.forEach((point)=>{
-       DButilsAzure.execQuery(
-           "IF EXISTS (SELECT * " +
-                            "FROM savedPoints " +
-                            "WHERE point='"+point.name+"') " +
-           "UPDATE savedPoints " +
-           "SET internalRank="+point.internalRank+" " +
-           "WHERE [point]='"+point.name+"' and [user]='"+
-                req.decoded.username+"' " +
-           "ELSE " +
-           "INSERT INTO savedPoints VALUES ('"+req.decoded.username+"','"+point.name+"',GETDATE(),"+point.internalRank+")"
-       )
-       .then(function(){
-           res.status(200).send('done');
-       })
-       .catch(function(err){
-           console.log(err);
-           res.send(err);
-       });
+    const points=req.body.points;
+    if(points===undefined || points.length===0){
+        res.send("Bad request");
+        return;
+    }
+    let validationCheck = true;
+    points.forEach((point)=>{
+        if(point===undefined || point.name===undefined || point.name==="" || point.internalRank===undefined || point.internalRank<0){
+            validationCheck=false;
+        }
+    });
+    if(!validationCheck){
+        res.send("Bad request");
+        return;
+    }
+    points.forEach((point)=>{
+        DButilsAzure.execQuery(
+            "IF EXISTS (SELECT * " +
+            "FROM savedPoints " +
+            "WHERE point='"+point.name+"') " +
+            "UPDATE savedPoints " +
+            "SET internalRank="+point.internalRank+" " +
+            "WHERE [point]='"+point.name+"' and [user]='"+
+            req.decoded.username+"' " +
+            "ELSE " +
+            "INSERT INTO savedPoints VALUES ('"+req.decoded.username+"','"+point.name+"',GETDATE(),"+point.internalRank+")"
+        )
+            .then(function(){
+                res.status(200);
+            })
+            .catch(function(err){
+                console.log(err);
+                res.send("Error occurred while adding the points to favorites");
+            });
     })
 });
 

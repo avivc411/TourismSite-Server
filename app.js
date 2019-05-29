@@ -6,7 +6,7 @@ const pointsRoutes = require('./api/routes/points');
 const categoriesRoutes = require('./api/routes/categories');
 const DButilsAzure = require('./api/routes/DButils');
 
-//app.use(bodyParser.urlencoded({extended: false}));
+app.use(bodyParser.urlencoded({extended: false}));
 app.use(bodyParser.json());
 
 app.use('/users', usersRoutes);

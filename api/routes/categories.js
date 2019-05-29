@@ -1,4 +1,3 @@
-
 const express=require('express');
 const router=express.Router();
 const DButilsAzure = require('./DButils');
@@ -61,11 +60,14 @@ router.get('/private/getPopular', (req, res)=> {
         " UNION ALL  select TOP (1) [name],[desc],[rank],[numOfViewers],[category] from points where category = @Category2 " +
         " and [numOfViewers] = (select Max([numOfViewers]) from points where category = @Category2)")
             .then(function(result){
-            res.status(200).send(result);
+                if(result.length===0)
+                    res.send("No categories for user or no points in the category");
+                else
+                    res.status(200).send(result);
         })
         .catch(function(err){
             console.log(err);
-            res.send(err);
+            res.send("Error occurred while reading the popular points in the user's categories");
         });
 });
 

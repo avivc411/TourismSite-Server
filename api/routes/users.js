@@ -5,24 +5,36 @@ const jwt=require('jsonwebtoken');
 const secret = "doubleOSeven";
 
 router.post('/login', (req, res)=>{
-    DButilsAzure.execQuery(
-        "select username from users where username='"+req.body.username+"' and pass='"+req.body.password+"'")
-        .then(function(result){
-            if(result.length===0)
-                res.status(201).json({
-                    message: 'Username is not exist or password is incorrect'
-                });
-            else {
-                const payload = {username: req.body.username, password: req.body.password};
-                const options = {expiresIn: "1d"};
-                const token = jwt.sign(payload, secret, options);
-                res.send(token);
-            }
-        })
-        .catch(function(err){
-            console.log(err);
-            res.send(err);
-        });
+    try {
+        const username = req.body.username;
+        const password = req.body.password;
+        if (username === undefined || password === undefined || username === "" || password === "") {
+            res.send("Bad request");
+            return;
+        }
+        DButilsAzure.execQuery(
+            "select username from users where username='" + req.body.username + "' and pass='" + req.body.password + "'")
+            .then(function (result) {
+                if (result.length === 0)
+                    res.json({
+                        message: 'Username is not exist or password is incorrect'
+                    });
+                else {
+                    const payload = {username: req.body.username, password: req.body.password};
+                    const options = {expiresIn: "1d"};
+                    const token = jwt.sign(payload, secret, options);
+                    res.send(token);
+                }
+            })
+            .catch(function (err) {
+                console.log(err);
+                res.send("Error occurred while login");
+            });
+    }
+    catch (e) {
+        console.log(e);
+        res.send("Error occurred while login");
+    }
 });
 
 router.post('/register', (req, res, next)=>{
@@ -100,22 +112,29 @@ router.get('/getMyQuestions/:username', (req, res)=>{
 
 router.post('/restorePassword', (req, res)=>{
     const username = req.body.username;
+    const questionID = req.body.questionID;
     const answer = req.body.answer;
+    if(username===undefined || username===""
+        || questionID===undefined || questionID==="" || questionID<0
+        || answer===undefined || answer===""){
+        res.send("Bad request");
+        return;
+    }
     DButilsAzure.execQuery(
         "select pass " +
         "from users join questionsForUsers " +
         "on [user]=username "+
-        "where [user]='"+username+"' and question="+req.body.questionID+" and answer='"+answer+"';")
+        "where [user]='"+username+"' and question="+questionID+" and answer='"+answer+"';")
         .then(function(result){
             console.log(result.length);
             if(result.length===0)
-                res.status(200).send("User does not exists or wrong answer");
+                res.send("User does not exists or wrong answer");
             else
                 res.status(200).json(result);
         })
         .catch(function(err){
             console.log(err);
-            res.send("User does not exists or wrong answer");
+            res.send("Error occurred while retrieving the password");
         });
 });
 
