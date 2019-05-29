@@ -138,7 +138,29 @@ router.post('/register', (req, res, next)=> {
         res.send("Not all fields exists");
         return;
     }
-    // user name checking
+
+   var counterEmail=0;
+    var index=0;
+    var counterDot=0;
+    //email checking
+   for (var i=0;i<user.email.length-1;i++){
+       if (user.email[i]==='@') {
+           counterEmail++;
+           index=i;
+       }
+    }
+    for (var i=index;i<user.email.length-1;i++){
+        if (user.email[i]==='.') {
+            counterDot++;
+        }
+    }
+   if (counterEmail!=1 || counterDot===0){
+       res.send('illegal email');
+       return;
+   }
+
+
+// user name checking
     if (user.username.length < 3 || user.username > 8) {
         res.send("Username's length illegal");
         return;
