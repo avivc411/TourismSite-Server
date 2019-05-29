@@ -234,8 +234,11 @@ router.get('/private/getLastTwoPoints', (req, res)=>{
         "on username=[user] "+
         "where [user]='"+req.decoded.username+"' "+
         "order by [savedDate] desc;")
-        .then(function(result){
-            res.status(200).send(result);
+        .then(function(result) {
+            res.status(200).json({
+                message: 'points:',
+                result: result
+            })
         })
         .catch(function(err){
             console.log(err);
@@ -250,7 +253,10 @@ router.get('/private/getFavoritesPoints', (req, res)=>{
         "on point=[name] "+
         "where [user]='"+req.decoded.username+"'")
         .then(function(result){
-            res.status(200).send(result);
+            res.status(200).json({
+                message: 'points:',
+                result: result
+            })
         })
         .catch(function(err){
             console.log(err);

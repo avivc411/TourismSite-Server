@@ -119,6 +119,39 @@ router.post('/register', (req, res, next)=> {
 });
 
 // categories ****
+
+router.post('/register', (req, res, next)=>{
+    const categories=req.body.categories;
+    if (categories==null || categories.length<2)
+        res.send("categories not enterd");
+    var counter=0;
+    categories.forEach(function(category) {
+        const categoryName = category.name;
+        DButilsAzure.execQuery(
+            "select * from categories where [name]='"+categoryName+"'")
+            .then(function(result){
+              //  if(result.length===1)
+               res.send(result);
+        })
+            .catch(function(err){
+                console.log(err);
+                res.send(err);
+            });
+    });
+    res.send('counter is:'+counter);
+    if (counter===categories.length)
+        res.send('ok all categories good')
+    //res.status(200).json({message: 'categories inserted'});
+    next();
+});
+
+
+
+
+
+
+
+
 router.post('/register', (req, res, next)=>{
     const categories=req.body.categories;
     if (categories==null || categories.length<2)
@@ -219,9 +252,9 @@ router.get('/getMyQuestions/:username', (req, res)=>{
                 res.status(200).send("User does not exists");
             else
                 res.status(200).json({
-                    message: 'questions:',
-                    result: result
-                });
+                message: 'questions:',
+                result: result
+            });
         })
         .catch(function(err){
             console.log(err);
