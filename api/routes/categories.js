@@ -18,8 +18,6 @@ router.use('/private', (req, res, next)=>{
     }
 });
 
-
-
 router.get('/getCategories', (req, res, next)=>{
     DButilsAzure.execQuery(
         "SELECT * FROM categories")
@@ -35,8 +33,6 @@ router.get('/getCategories', (req, res, next)=>{
             res.send(err);
         });
 });
-
-
 
 router.get('/getAllInCategory/:category', (req, res,next)=>{
     DButilsAzure.execQuery(
@@ -90,24 +86,5 @@ router.get('/private/getPopular', (req, res)=> {
             res.send("Error occurred while reading the popular points in the user's categories");
         });
 });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 module.exports = router;
