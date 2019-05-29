@@ -142,6 +142,7 @@ router.post('/register', (req, res, next)=> {
    var counterEmail=0;
     var index=0;
     var counterDot=0;
+    var indexDot=0;
     //email checking
    for (var i=0;i<user.email.length-1;i++){
        if (user.email[i]==='@') {
@@ -152,9 +153,11 @@ router.post('/register', (req, res, next)=> {
     for (var i=index;i<user.email.length-1;i++){
         if (user.email[i]==='.') {
             counterDot++;
+            indexDot=i;
         }
     }
-   if (counterEmail!=1 || counterDot===0){
+    
+   if (counterEmail!=1 || counterDot===0|| user.email.length-indexDot===0){
        res.send('illegal email');
        return;
    }
