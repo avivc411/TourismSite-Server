@@ -37,102 +37,6 @@ router.post('/login', (req, res)=>{
     }
 });
 
-router.post('/register', (req, res, next)=> {
-    const user = {
-        username: req.body.username,
-        password: req.body.password,
-        firstName: req.body.firstName,
-        lastName: req.body.lastName,
-        city: req.body.city,
-        country: req.body.country,
-        email: req.body.email
-    };
-
-    // null checking
-    if (user.username==undefined || user.password== undefined ||
-        user.firstName==undefined || user.lastName== undefined||
-        user.city==undefined || user.country== undefined || user.email==undefined ||
-        user.username.length<1 || user.password.length<1  ||
-        user.firstName.length<1  || user.lastName.length<1 ||
-        user.city.length<1  || user.country.length<1  || user.email.length<1 ){
-        res.send("not all fields exists");
-        return;
-    }
-
-    // user name checking
-    if (user.username.length<3 || user.username>8){
-        res.send("user name length illegal");
-        return;
-    }
-    for (var i=0;i<user.username.length;i++){
-        if (((user.username[i]>='a' && user.username[i]<='z')|| (user.username[i]>='A' && user.username[i]<='Z')))
-            continue;
-        else {
-            res.send('illegal username');
-            break;
-        }
-    }
-    // password checking
-    if (user.password.length < 4 || user.password.length > 10) {
-        res.send("invalid password - password must be between 5 to 10 notes");
-        return;
-    }
-    for (var i=0;i<user.username.length;i++){
-        if (((user.password[i]>='a' && user.password[i]<='z')|| (user.password[i]>='A' && user.password[i]<='Z') ||
-            (user.password[i]>='0' && user.password[i]<='9')))
-            continue;
-        else {
-            res.send('illegal password');
-            break;
-        }
-    }
-    // country checking
-    DButilsAzure.execQuery(
-        "select * " +
-        "from countries " +
-        "where [countryName]='" + user.country + "';")
-        .then(function (result) {
-            console.log("country check");
-            console.log(result.length);
-            if (result.length === 0) {
-                res.status(200).send("Country doesnt exists");
-                return;
-            }
-        });
-
-    // user already exists checking
-    DButilsAzure.execQuery(
-        "select * from users where [username]='"+user.username+"'")
-        .then(function (result) {
-            console.log("user check");
-            console.log(result.length);
-            if (result.length !=0) {
-                res.status(200).send("user Already exists");
-                return;
-            }
-        })
-        .catch(function (err) {
-            //console.log(err)
-            res.send(err)
-        });
-
-
-
-    DButilsAzure.execQuery(
-        "insert into users values('" +
-        user.username + "','" + user.password + "','" +
-        user.firstName + "','" + user.lastName + "','" +
-        user.city + "','" + user.country + "','" +
-        user.email + "')")
-        .then(function () {
-            //res.status(200).json({message: 'register successfully'});
-            next();
-        })
-        .catch(function (err) {
-            //console.log(err)
-            res.send(err)
-        });
-});
 
 // categories ****
 router.post('/register', (req, res, next)=>{
@@ -172,17 +76,7 @@ router.post('/register', (req, res, next)=>{
 });
 
 
-router.post('/register', (req, res, next)=>{
-    const categories=req.body.categories;
-    categories.forEach(function(category) {
-        const categoryName = category.name;
-        DButilsAzure.execQuery(
-            "insert into userCategories values('"+
-            req.body.username+"','"+categoryName+"')");
-    });
-//res.status(200).json({message: 'categories inserted'});
-    next();
-});
+
 
 //null checking for questions and answers
 router.post('/register', (req, res, next)=> {
@@ -234,6 +128,135 @@ router.post('/register', (req, res, next)=>{
 
 
 
+
+router.post('/register', (req, res, next)=> {
+    const user = {
+        username: req.body.username,
+        password: req.body.password,
+        firstName: req.body.firstName,
+        lastName: req.body.lastName,
+        city: req.body.city,
+        country: req.body.country,
+        email: req.body.email
+    };
+    var fields=true;
+    // null checking
+    if (user.username==undefined || user.password== undefined ||
+        user.firstName==undefined || user.lastName== undefined||
+        user.city==undefined || user.country== undefined || user.email==undefined ||
+        user.username.length<1 || user.password.length<1  ||
+        user.firstName.length<1  || user.lastName.length<1 ||
+        user.city.length<1  || user.country.length<1  || user.email.length<1 ){
+        res.send("not all fields exists");
+        fields=false;
+        return;
+    }
+    var legalUserName=true;
+    // user name checking
+    if (user.username.length<3 || user.username>8){
+        res.send("user name length illegal");
+        llegalUserName=false;
+        return;
+    }
+    if (legalUserName==true) {
+        for (var i = 0; i < user.username.length; i++) {
+            if (((user.username[i] >= 'a' && user.username[i] <= 'z') || (user.username[i] >= 'A' && user.username[i] <= 'Z')))
+                continue;
+            else {
+                res.send('illegal username');
+                legalUserName=false;
+                break;
+            }
+        }
+    }
+    var legalPass=true;
+    // password checking
+    if (user.password.length < 4 || user.password.length > 10) {
+        res.send("invalid password - password must be between 5 to 10 notes");
+        legalPass=false;
+        return;
+    }
+    if (legalPass==true) {
+        for (var i = 0; i < user.password.length; i++) {
+            if (((user.password[i] >= 'a' && user.password[i] <= 'z') || (user.password[i] >= 'A' && user.password[i] <= 'Z'))
+                || user.password[i] == '0' || user.password[i] == '1' || user.password[i] == '2' || user.password[i] == '3'
+                || user.password[i] == '4' || user.password[i] == '5' || user.password[i] == '6'
+                || user.password[i] == '7' || user.password[i] == '8' || user.password[i] == '9')
+                continue;
+            else {
+                res.send('illegal password');
+                legalPass=false;
+                break;
+            }
+        }
+    }
+    var legalCountry=true;
+    // country checking
+    DButilsAzure.execQuery(
+        "select * " +
+        "from countries " +
+        "where [countryName]='" + user.country + "';")
+        .then(function (result) {
+            console.log("country check");
+            console.log(result.length);
+            if (result.length === 0) {
+                res.status(200).send("Country doesnt exists");
+                legalCountry=false;
+                return;
+            }
+        });
+    var legalNewUser=true;
+    // user already exists checking
+    DButilsAzure.execQuery(
+        "select * from users where [username]='"+user.username+"'")
+        .then(function (result) {
+            console.log("user check");
+            console.log(result.length);
+            if (result.length !=0) {
+                res.status(200).send("user Already exists");
+                legalNewUser=false;
+                return;
+            }
+        })
+        .catch(function (err) {
+            //console.log(err)
+            res.send(err);
+        });
+
+
+if (legalCountry===true && legalNewUser===true && legalPass===true && legalUserName===true
+    && fields===true) {
+    DButilsAzure.execQuery(
+        "insert into users values('" +
+        user.username + "','" + user.password + "','" +
+        user.firstName + "','" + user.lastName + "','" +
+        user.city + "','" + user.country + "','" +
+        user.email + "')")
+        .then(function () {
+        })
+        .catch(function (err) {
+            //console.log(err)
+            res.send(err);
+        });
+}
+    if (legalCountry===true && legalNewUser===true && legalPass===true && legalUserName===true
+        && fields===true) {
+        next();
+    }
+});
+
+
+router.post('/register', (req, res, next)=>{
+    const categories=req.body.categories;
+    categories.forEach(function(category) {
+        const categoryName = category.name;
+        DButilsAzure.execQuery(
+            "insert into userCategories values('"+
+            req.body.username+"','"+categoryName+"')");
+    });
+    next();
+});
+
 router.post('/register', (req, res, next)=>{
     DButilsAzure.execQuery(
         "insert into questionsForUsers values('"+
@@ -249,10 +272,6 @@ router.post('/register', (req, res)=>{
         req.body.answer2+"')");
     res.status(200).json({message: 'register successfully'});
 });
-
-
-
-
 
 
 
