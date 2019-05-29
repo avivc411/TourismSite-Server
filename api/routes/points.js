@@ -171,15 +171,21 @@ router.post('/private/rankPoint', (req, res)=> {
         });
 });
 
+
+
+// checking if point exists
 router.post('/private/writeReviewOnPoint', (req, res, next)=>{
+
+    if (req.body.review===undefined)
+        res.send('review is empty');
     DButilsAzure.execQuery(
-        "SELECT * FROM reviews where [user]='"+req.decoded.username+"' and point='"+req.body.pointName+"'")
+        "SELECT * FROM points where [name]='"+req.body.pointName+"'")
         .then(function(result){
-            if(!result.length===0)
+            if(result.length===0)
                 res.status(201).json({
-                    message: 'You have already reviewed this points'
+                    message: 'not such point'
                 });
-            else next(result);
+            else next();
         })
         .catch(function(err){
             console.log(err);
@@ -187,8 +193,24 @@ router.post('/private/writeReviewOnPoint', (req, res, next)=>{
         });
 });
 
-router.post('/private/writeReviewOnPoint', (result, req, res)=> {
-    console.log(result);
+
+// check if user already wrote review of the point
+router.post('/private/writeReviewOnPoint', (req, res, next)=>{
+    DButilsAzure.execQuery(
+        "SELECT * FROM reviews where [user]='"+req.decoded.username+"' and point='"+req.body.pointName+"'")
+        .then(function(result){
+            if (result.length===1) res.send('user already reviewed the point');
+            else
+                next();
+        })
+        .catch(function(err){
+            console.log(err);
+            res.send(err);
+        });
+});
+
+
+router.post('/private/writeReviewOnPoint', ( req, res)=> {
     DButilsAzure.execQuery(
         "insert into reviews values('"+req.decoded.username+"','"+req.body.pointName+"','"+req.body.review+"', GETDATE())")
         .then(function(){
