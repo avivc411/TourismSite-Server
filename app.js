@@ -5,6 +5,9 @@ const usersRoutes = require('./api/routes/users');
 const pointsRoutes = require('./api/routes/points');
 const categoriesRoutes = require('./api/routes/categories');
 const DButilsAzure = require('./api/routes/DButils');
+const cors=require('cors');
+
+app.use(cors());
 
 app.use(bodyParser.urlencoded({extended: false}));
 app.use(bodyParser.json());
