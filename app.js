@@ -20,7 +20,9 @@ app.get('/getCountries', (req, res)=> {
     DButilsAzure.execQuery(
         "SELECT * FROM countries")
         .then(function (result) {
-            res.send(result)
+            res.status(200).json({
+                countries:result
+            })
         })
         .catch(function (err) {
             console.log(err);

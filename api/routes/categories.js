@@ -23,14 +23,12 @@ router.get('/getCategories', (req, res, next)=>{
         "SELECT * FROM categories")
         .then(function(result){
             res.status(200).json({
-                message: 'categories:',
-                result: result
+                categories: result
             });
-            res.send(result)
         })
         .catch(function(err){
             console.log(err);
-            res.send(err);
+            res.status(404).send(err);
         });
 });
 
@@ -39,13 +37,13 @@ router.get('/getAllInCategory/:category', (req, res,next)=>{
         "SELECT * FROM categories where [name]='"+req.params.category+"'")
         .then(function(result){
             if(result.length===0)
-                res.send("wrong category");
+                res.status(404).send("wrong category");
             else
                 next();
                 })
         .catch(function(err){
             console.log(err);
-            res.send("Error occurred while retrieving the points");
+            res.status(404).send("Error occurred while retrieving the points");
         });
 });
 
@@ -61,7 +59,7 @@ router.get('/getAllInCategory/:category', (req, res)=>{
         })
         .catch(function(err){
             console.log(err);
-            res.send(err);
+            res.status(404).send(err);
         });
 });
 
@@ -70,12 +68,12 @@ router.get('/private/getPopular', (req, res)=> {
     DButilsAzure.execQuery(
         "DECLARE @Category1 VARCHAR(20) DECLARE @Category2 VARCHAR(20) SET @Category1 = (select TOP(1) category from userCategories where userCategories.[user]='"+req.decoded.username+"' order by category asc)" +
         " SET @Category2 = (select TOP(1) category from userCategories where userCategories.[user]='"+req.decoded.username+"' order by category desc)" +
-        "select TOP (1) [name],[desc],[rank],[numOfViewers],[category] from points where category = @Category1 and [numOfViewers] = (select Max([numOfViewers]) from points where category = @Category1)" +
-        " UNION ALL  select TOP (1) [name],[desc],[rank],[numOfViewers],[category] from points where category = @Category2 " +
+        "select TOP (1) [name],[desc] description,[rank],[numOfViewers],[category],[picture] from points where category = @Category1 and [numOfViewers] = (select Max([numOfViewers]) from points where category = @Category1)" +
+        " UNION ALL  select TOP (1) [name],[desc] description,[rank],[numOfViewers],[category],[picture] from points where category = @Category2 " +
         " and [numOfViewers] = (select Max([numOfViewers]) from points where category = @Category2)")
             .then(function(result){
                 if(result.length===0)
-                    res.send("No categories for user or no points in the category");
+                    res.status(404).send("No categories for user or no points in the category");
                 else
                     res.status(200).json({
                         twoPopularPointsInUsersCategories:result
@@ -83,7 +81,7 @@ router.get('/private/getPopular', (req, res)=> {
         })
         .catch(function(err){
             console.log(err);
-            res.send("Error occurred while reading the popular points in the user's categories");
+            res.status(404).send("Error occurred while reading the popular points in the user's categories");
         });
 });
 
