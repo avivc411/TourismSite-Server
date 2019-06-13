@@ -40,22 +40,13 @@ router.post('/login', (req, res)=>{
 router.get('/getQuestions', (req, res)=>{
     try {
         DButilsAzure.execQuery(
-            "select * from questions" + req.body.username + "' and pass='" + req.body.password + "'")
+            "select * from questions")
             .then(function (result) {
-                if (result.length === 0)
-                    res.json({
-                        message: 'Username is not exist or password is incorrect'
-                    });
-                else {
-                    const payload = {username: req.body.username, password: req.body.password};
-                    const options = {expiresIn: "1d"};
-                    const token = jwt.sign(payload, secret, options);
-                    res.status(200).send(token);
-                }
+                    res.status(200).send(result);
             })
             .catch(function (err) {
                 console.log(err);
-                res.status(404).send("Error occurred while login");
+                res.status(404).send("Error occurred while getQuestion");
             });
     }
     catch (e) {
