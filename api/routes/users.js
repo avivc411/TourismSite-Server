@@ -37,7 +37,7 @@ router.post('/login', (req, res)=>{
     }
 });
 
-router.post('/getQuestions', (req, res)=>{
+router.get('/getQuestions', (req, res)=>{
     try {
         DButilsAzure.execQuery(
             "select * from questions" + req.body.username + "' and pass='" + req.body.password + "'")
