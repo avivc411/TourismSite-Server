@@ -55,6 +55,27 @@ router.get('/getAllQuestions', (req, res)=>{
     }
 });
 
+router.post('/register', (req, res, next)=>{
+    try {
+        DButilsAzure.execQuery(
+            "select * from users where [username]='"+req.body.username+"'")
+            .then(function (result) {
+                if(result.length>0)
+                    res.status(404).send("Username is taken. Please choose other one.")
+                else next();
+            })
+            .catch(function (err) {
+                console.log(err);
+                res.status(404).send("Error occurred while retrieving username");
+            });
+    }
+    catch (e) {
+        console.log(e);
+        res.status(404).send("Error occurred while retrieving username");
+    }
+});
+
+
 // categories ****
 router.post('/register', (req, res, next)=>{
     const categories=req.body.categories;
