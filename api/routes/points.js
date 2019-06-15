@@ -97,7 +97,6 @@ router.get('/getLastTwoReviews/:pointName', (req, res)=>{
         });
 });
 
-
 router.post('/private/rankPoint', (req, res, next)=>{
     const pointName = req.body.pointName;
     if(req.body.rank===undefined || pointName===undefined || pointName==="") {
@@ -175,13 +174,11 @@ router.post('/private/rankPoint', (req, res)=> {
         });
 });
 
-
-
 // checking if point exists
 router.post('/private/writeReviewOnPoint', (req, res, next)=>{
 
     if (req.body.review===undefined || req.body.pointName===undefined || req.body.review.length===0
-    || req.body.pointName.length===0)
+        || req.body.pointName.length===0)
         res.status(404).send('review point error: Empty field');
     DButilsAzure.execQuery(
         "SELECT * FROM points where [name]='"+req.body.pointName+"'")
@@ -198,7 +195,6 @@ router.post('/private/writeReviewOnPoint', (req, res, next)=>{
         });
 });
 
-
 // check if user already wrote review of the point
 router.post('/private/writeReviewOnPoint', (req, res, next)=>{
     DButilsAzure.execQuery(
@@ -213,7 +209,6 @@ router.post('/private/writeReviewOnPoint', (req, res, next)=>{
             res.status(404).send(err);
         });
 });
-
 
 router.post('/private/writeReviewOnPoint', ( req, res)=> {
     DButilsAzure.execQuery(
@@ -247,10 +242,11 @@ router.get('/private/getLastTwoPoints', (req, res)=>{
 
 router.get('/private/getFavoritesPoints', (req, res)=>{
     DButilsAzure.execQuery(
-        "select [name],[desc],[rank],[numOfViewers],[category] "+
+        "select * "+
         "from savedPoints join points "+
-        "on point=[name] "+
-        "where [user]='"+req.decoded.username+"'")
+        "on savedPoints.point=points.[name] "+
+        "where savedPoints.[user]='"+req.decoded.username+"' " +
+        "order by savedPoints.internalRank asc")
         .then(function(result){
             res.status(200).json({
                 points: result
@@ -306,9 +302,27 @@ router.put('/private/addPointsToFavorites', (req, res, next)=>{
         next();
 });
 
-router.put('/private/addPointsToFavorites', (req, res)=> {
+router.put('/private/addPointsToFavorites', (req, res, next)=> {
+    DButilsAzure.execQuery(
+        "SELECT * FROM savedPoints WHERE [user]='"+
+        req.decoded.username + "' ")
+        .then(function(result){
+            res.locals.points=result;
+            next();
+        })
+        .catch(function (err) {
+            console.log(err);
+            res.status(404).send("Error occurred while removing points from favorites");
+        });
+});
+
+router.put('/private/addPointsToFavorites', (req, res, next)=> {
     const points=req.body.points;
+    let toDelete=res.locals.points;
     points.forEach((point) => {
+        let index=points.findIndex(element => element.name=point.name);
+        if(index>=0)
+            toDelete.splice(index, 1);
         DButilsAzure.execQuery(
             "IF EXISTS (SELECT * " +
             "FROM savedPoints " +
@@ -322,6 +336,25 @@ router.put('/private/addPointsToFavorites', (req, res)=> {
             .catch(function (err) {
                 console.log(err);
                 res.status(404).send("Error occurred while adding the points to favorites");
+            });
+    });
+    res.locals.points=toDelete;
+    next();
+});
+
+router.put('/private/addPointsToFavorites', (req, res)=> {
+    const toDelete=res.locals.points;
+    console.log("Deleting");
+    toDelete.forEach((point)=>{
+        console.log(point);
+    });
+    toDelete.forEach((point)=>{
+        DButilsAzure.execQuery(
+            "Delete FROM savedPoints WHERE [user]='"+
+            req.decoded.username + "' AND [point]='"+point.point+"'")
+            .catch(function (err) {
+                console.log(err);
+                res.status(404).send("Error occurred while removing points from favorites");
             });
     });
     res.status(200).send("Done");
